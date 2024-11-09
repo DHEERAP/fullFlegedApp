@@ -129,7 +129,6 @@ function Home() {
   }, []);
 
   if (loading) {
-   
     return (
       <div className="text-center py-8">
         <span className="text-lg font-semibold">Loading posts...</span>
@@ -138,9 +137,8 @@ function Home() {
   }
 
   if (posts.length === 0) {
-    // Show login prompt if no posts are found after fetching
     return (
-      <div className="w-1/2 bg-white p-4 rounded-lg shadow-md">
+      <div className="w-full max-w-md mx-auto bg-white p-4 rounded-lg shadow-md text-center">
         <h1 className="text-3xl font-extrabold text-gray-800 hover:text-blue-500 transition-colors duration-300 ease-in-out">
           Login to read posts
         </h1>
@@ -157,11 +155,11 @@ function Home() {
   }
 
   return (
-    <div className="w-full py-8">
+    <div className="w-full py-40"> {/* Doubled padding here */}
       <Container>
         <div className="flex flex-wrap">
           {posts.map((post) => (
-            <div key={post.$id} className="p-2 w-1/4">
+            <div key={post.$id} className="p-2 w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
               <PostCard {...post} />
             </div>
           ))}
