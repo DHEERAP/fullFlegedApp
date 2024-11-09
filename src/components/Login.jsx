@@ -134,7 +134,8 @@ function Login() {
         navigate("/")
       }
     } catch (error) {
-      setError(error.message)
+      // setError(error.message)
+      console.log("error occured@")
     }
   }
 
