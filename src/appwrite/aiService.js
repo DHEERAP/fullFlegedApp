@@ -21,7 +21,7 @@ class AiService {
             console.log('Generating summary for:', title);
             
             // Get the generative model
-            const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+            const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             
             const prompt = `Analyze this blog post and provide exactly 5 key bullet points. Each bullet point should be concise and informative. Do not include any additional text or explanations. Just provide the 5 bullet points.
 
@@ -53,6 +53,28 @@ Format the response as:
             return bulletPoints;
         } catch (error) {
             console.error('Error in generateSummary:', error);
+            throw error;
+        }
+    }
+
+    async generateTags(content) {
+        try {
+            const prompt = `Generate 3-5 relevant tags for the following content. Return only the tags separated by commas: ${content}`;
+            const result = await this.generateWithRetry(prompt);
+            return result.response.text().split(',').map(tag => tag.trim());
+        } catch (error) {
+            console.error("Error generating tags:", error);
+            throw error;
+        }
+    }
+
+    async generateCategory(content) {
+        try {
+            const prompt = `Suggest the most appropriate category for the following content. Return only the category name: ${content}`;
+            const result = await this.generateWithRetry(prompt);
+            return result.response.text().trim();
+        } catch (error) {
+            console.error("Error generating category:", error);
             throw error;
         }
     }
