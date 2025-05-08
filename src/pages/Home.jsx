@@ -163,7 +163,7 @@ function Home() {
 
     return (
         <div className="py-20 bg-gradient-to-b from-gray-50 to-blue-100">
-            <Container>
+            <div className="max-w-6xl mx-auto px-4">
                 {/* Add New Post Section for users with no posts */}
                 {userData && userPosts.length === 0 ? (
                     <div className="w-full flex flex-col items-center justify-center mb-12">
@@ -370,7 +370,7 @@ function Home() {
                         )}
                     </>
                 )}
-            </Container>
+            </div>
         </div>
     );
 }
