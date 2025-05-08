@@ -22,6 +22,7 @@ function Home() {
     const [currentUserId, setCurrentUserId] = useState(null);
     const userData = useSelector((state) => state.auth.userData);
     const userPosts = posts.filter(post => userData && post.userId === userData.$id);
+    const [isPaused, setIsPaused] = useState(false);
 
     // Fake stories data for non-logged-in users
     const fakeStories = [
@@ -83,25 +84,43 @@ function Home() {
 
     // Auto-scroll effect for horizontal posts
     useEffect(() => {
-        if (!authStatus) {
-            const interval = setInterval(() => {
-                setScrollPosition(prev => {
-                    const container = scrollContainerRef.current;
-                    if (!container) return prev;
-                    
-                    const maxScroll = container.scrollWidth - container.clientWidth;
-                    const newPosition = prev + 1;
-                    
-                    if (newPosition >= maxScroll) {
-                        return 0; // Reset to start
-                    }
-                    return newPosition;
-                });
-            }, 20);
+        let animationFrame;
+        let timeout;
+        let scrollAmount = 2; // Adjust for speed
 
-            return () => clearInterval(interval);
+        function startAutoScroll() {
+            const container = scrollContainerRef.current;
+            if (!container) {
+                // Ref not ready, try again shortly
+                timeout = setTimeout(startAutoScroll, 100);
+                return;
+            }
+            if (container.scrollWidth <= container.clientWidth) {
+                // Not scrollable, do nothing
+                return;
+            }
+            function autoScroll() {
+                if (!isPaused) {
+                    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 1) {
+                        container.scrollLeft = 0;
+                    } else {
+                        container.scrollLeft += scrollAmount;
+                    }
+                }
+                animationFrame = requestAnimationFrame(autoScroll);
+            }
+            animationFrame = requestAnimationFrame(autoScroll);
         }
-    }, [authStatus]);
+
+        if (!authStatus) {
+            startAutoScroll();
+        }
+
+        return () => {
+            if (animationFrame) cancelAnimationFrame(animationFrame);
+            if (timeout) clearTimeout(timeout);
+        };
+    }, [authStatus, isPaused]);
 
     useEffect(() => {
         if (scrollContainerRef.current) {
@@ -220,6 +239,10 @@ function Home() {
                                             ref={scrollContainerRef}
                                             className="flex overflow-x-auto gap-2 sm:gap-4 md:gap-6 py-2 sm:py-4 w-full snap-x snap-mandatory"
                                             style={{ scrollBehavior: 'smooth' }}
+                                            onMouseEnter={() => setIsPaused(true)}
+                                            onMouseLeave={() => setIsPaused(false)}
+                                            onTouchStart={() => setIsPaused(true)}
+                                            onTouchEnd={() => setIsPaused(false)}
                                         >
                                             {fakeStories.map((story) => (
                                                 <div 
