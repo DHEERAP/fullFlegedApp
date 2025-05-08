@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button, Container, PostCard } from "../components";
 import appwriteService from "../appwrite/config";
-import { FaSearch, FaFilter, FaPlus, FaStar, FaClock, FaFire, FaArrowRight } from "react-icons/fa";
+import { FaSearch, FaFilter, FaPlus, FaStar, FaClock, FaFire, FaArrowRight, FaPenFancy } from "react-icons/fa";
 import { useSelector } from 'react-redux'
 import authService from "../appwrite/auth";
 
@@ -20,6 +20,8 @@ function Home() {
     const [categories, setCategories] = useState([]);
     const authStatus = useSelector((state) => state.auth.status);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const userData = useSelector((state) => state.auth.userData);
+    const userPosts = posts.filter(post => userData && post.userId === userData.$id);
 
     // Fake stories data for non-logged-in users
     const fakeStories = [
@@ -160,217 +162,211 @@ function Home() {
     }
 
     return (
-        <div className='w-full py-8'>
+        <div className="py-20 bg-gradient-to-b from-gray-50 to-blue-100">
             <Container>
-                {/* Hero Section for Non-Logged In Users */}
-                {!authStatus && (
-                    <div className="relative overflow-hidden">
-                        {/* Hero Background */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10"></div>
-                        
-                        {/* Hero Content */}
-                        <div className="relative text-center mb-16 py-16">
-                            <h1 className="text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-                                Welcome to BlogApp
-                            </h1>
-                            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                                Discover amazing stories, share your thoughts, and connect with a community of passionate writers.
-                            </p>
-                            <div className="flex justify-center gap-6">
-                                <Link to="/login" className="bg-blue-500 text-white px-8 py-3 rounded-full hover:bg-blue-600 transition transform hover:scale-105 shadow-lg">
-                                    Get Started
-                                </Link>
-                                <Link to="/signup" className="bg-white text-blue-500 px-8 py-3 rounded-full hover:bg-gray-100 transition transform hover:scale-105 shadow-lg">
-                                    Join Our Community
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Auto-scrolling Posts Section with Fake Stories */}
-                        <div className="mb-16">
-                            <h2 className="text-3xl font-bold text-center mb-8">Trending Stories</h2>
-                            <div 
-                                ref={scrollContainerRef}
-                                className="flex overflow-x-hidden gap-4 py-4"
-                                style={{ scrollBehavior: 'smooth' }}
-                            >
-                                {fakeStories.map((story) => (
-                                    <div 
-                                        key={story.id}
-                                        className="flex-shrink-0 w-80 bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition duration-300"
+                {/* Add New Post Section for users with no posts */}
+                {userData && userPosts.length === 0 ? (
+                    <div className="w-full flex flex-col items-center justify-center mb-12">
+                        <div className="bg-gradient-to-r from-blue-400 to-purple-500 p-1 rounded-3xl shadow-xl w-full max-w-xl">
+                            <div className="bg-white rounded-3xl p-8 flex flex-col items-center">
+                                <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-full mb-4 shadow-lg">
+                                    <FaPenFancy className="text-white text-3xl" />
+                                </div>
+                                <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">Create your first post!</h2>
+                                <p className="text-gray-600 mb-6 text-center">Share your thoughts, stories, or expertise with the world. Start building your audience today.</p>
+                                <Link to="/add-post">
+                                    <Button
+                                        bgColor="bg-gradient-to-r from-blue-500 to-purple-600"
+                                        className="hover:from-blue-600 hover:to-purple-700 transition-all duration-300 px-8 py-3 rounded-full text-white text-lg shadow-lg flex items-center gap-2"
                                     >
-                                        <img 
-                                            src={story.image} 
-                                            alt={story.title}
-                                            className="w-full h-48 object-cover"
-                                        />
-                                        <div className="p-4">
-                                            <h3 className="text-xl font-semibold mb-2 line-clamp-2">{story.title}</h3>
-                                            <p className="text-gray-600 text-sm line-clamp-3 mb-4">{story.content}</p>
-                                            <Link 
-                                                to="/login"
-                                                className="text-blue-500 hover:text-blue-600 font-medium inline-flex items-center"
-                                            >
-                                                Read More <FaArrowRight className="ml-2" />
-                                            </Link>
-                                        </div>
-                                    </div>
-                                ))}
-                                {/* Duplicate stories for seamless scrolling */}
-                                {fakeStories.map((story) => (
-                                    <div 
-                                        key={`duplicate-${story.id}`}
-                                        className="flex-shrink-0 w-80 bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition duration-300"
-                                    >
-                                        <img 
-                                            src={story.image} 
-                                            alt={story.title}
-                                            className="w-full h-48 object-cover"
-                                        />
-                                        <div className="p-4">
-                                            <h3 className="text-xl font-semibold mb-2 line-clamp-2">{story.title}</h3>
-                                            <p className="text-gray-600 text-sm line-clamp-3 mb-4">{story.content}</p>
-                                            <Link 
-                                                to="/login"
-                                                className="text-blue-500 hover:text-blue-600 font-medium inline-flex items-center"
-                                            >
-                                                Read More <FaArrowRight className="ml-2" />
-                                            </Link>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Why Join Section */}
-                        <div className="bg-white rounded-2xl shadow-xl p-8 mb-16">
-                            <h2 className="text-3xl font-bold text-center mb-8">Why Join BlogApp?</h2>
-                            <div className="grid md:grid-cols-3 gap-8">
-                                <div className="text-center">
-                                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <FaSearch className="text-blue-500 text-2xl" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold mb-2">Discover Stories</h3>
-                                    <p className="text-gray-600">Find amazing content from our community of writers</p>
-                                </div>
-                                <div className="text-center">
-                                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <FaPlus className="text-purple-500 text-2xl" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold mb-2">Share Your Voice</h3>
-                                    <p className="text-gray-600">Create and share your own stories with the world</p>
-                                </div>
-                                <div className="text-center">
-                                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <FaFilter className="text-green-500 text-2xl" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold mb-2">Connect</h3>
-                                    <p className="text-gray-600">Engage with other writers and readers</p>
-                                </div>
+                                        <FaPenFancy className="text-white mr-2" />
+                                        Create Post
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
                     </div>
-                )}
-
-                {/* Posts Grid for Logged In Users */}
-                {authStatus && (
+                ) : (
                     <>
-                        <div className="mb-8">
-                            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                                <div className="relative flex-1">
-                                    <input
-                                        type="text"
-                                        placeholder="Search your posts..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full px-4 py-2 pl-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                    <FaSearch className="absolute left-3 top-3 text-gray-400" />
+                        {/* Hero Section for Non-Logged In Users */}
+                        {!authStatus && (
+                            <div className="relative overflow-hidden">
+                                {/* Hero Background */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10"></div>
+                                
+                                {/* Hero Content */}
+                                <div className="relative text-center mb-16 py-16">
+                                    <h1 className="text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+                                        Welcome to BlogApp
+                                    </h1>
+                                    <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                                        Discover amazing stories, share your thoughts, and connect with a community of passionate writers.
+                                    </p>
+                                    <div className="flex justify-center gap-6">
+                                        <Link to="/login" className="bg-blue-500 text-white px-8 py-3 rounded-full hover:bg-blue-600 transition transform hover:scale-105 shadow-lg">
+                                            Get Started
+                                        </Link>
+                                        <Link to="/signup" className="bg-white text-blue-500 px-8 py-3 rounded-full hover:bg-gray-100 transition transform hover:scale-105 shadow-lg">
+                                            Join Our Community
+                                        </Link>
+                                    </div>
                                 </div>
 
-                                <div className="flex gap-4">
-                                    <select
-                                        value={selectedCategory}
-                                        onChange={(e) => setSelectedCategory(e.target.value)}
-                                        className="px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                {/* Auto-scrolling Posts Section with Fake Stories */}
+                                <div className="mb-16">
+                                    <h2 className="text-3xl font-bold text-center mb-8">Trending Stories</h2>
+                                    <div 
+                                        ref={scrollContainerRef}
+                                        className="flex overflow-x-hidden gap-4 py-4"
+                                        style={{ scrollBehavior: 'smooth' }}
                                     >
-                                        <option value="all">All Categories</option>
-                                        {categories.map((category) => (
-                                            <option key={category} value={category}>
-                                                {category}
-                                            </option>
+                                        {fakeStories.map((story) => (
+                                            <div 
+                                                key={story.id}
+                                                className="flex-shrink-0 w-80 bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition duration-300"
+                                            >
+                                                <img 
+                                                    src={story.image} 
+                                                    alt={story.title}
+                                                    className="w-full h-48 object-cover"
+                                                />
+                                                <div className="p-4">
+                                                    <h3 className="text-xl font-semibold mb-2 line-clamp-2">{story.title}</h3>
+                                                    <p className="text-gray-600 text-sm line-clamp-3 mb-4">{story.content}</p>
+                                                    <Link 
+                                                        to="/login"
+                                                        className="text-blue-500 hover:text-blue-600 font-medium inline-flex items-center"
+                                                    >
+                                                        Read More <FaArrowRight className="ml-2" />
+                                                    </Link>
+                                                </div>
+                                            </div>
                                         ))}
-                                    </select>
+                                        {/* Duplicate stories for seamless scrolling */}
+                                        {fakeStories.map((story) => (
+                                            <div 
+                                                key={`duplicate-${story.id}`}
+                                                className="flex-shrink-0 w-80 bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition duration-300"
+                                            >
+                                                <img 
+                                                    src={story.image} 
+                                                    alt={story.title}
+                                                    className="w-full h-48 object-cover"
+                                                />
+                                                <div className="p-4">
+                                                    <h3 className="text-xl font-semibold mb-2 line-clamp-2">{story.title}</h3>
+                                                    <p className="text-gray-600 text-sm line-clamp-3 mb-4">{story.content}</p>
+                                                    <Link 
+                                                        to="/login"
+                                                        className="text-blue-500 hover:text-blue-600 font-medium inline-flex items-center"
+                                                    >
+                                                        Read More <FaArrowRight className="ml-2" />
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
 
-                                    <select
-                                        value={sortBy}
-                                        onChange={(e) => setSortBy(e.target.value)}
-                                        className="px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="newest">Newest First</option>
-                                        <option value="oldest">Oldest First</option>
-                                    </select>
-
-                                    <Link to="/add-post" className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">
-                                        <FaPlus />
-                                        New Post
-                                    </Link>
+                                {/* Why Join Section */}
+                                <div className="bg-white rounded-2xl shadow-xl p-8 mb-16">
+                                    <h2 className="text-3xl font-bold text-center mb-8">Why Join BlogApp?</h2>
+                                    <div className="grid md:grid-cols-3 gap-8">
+                                        <div className="text-center">
+                                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <FaSearch className="text-blue-500 text-2xl" />
+                                            </div>
+                                            <h3 className="text-xl font-semibold mb-2">Discover Stories</h3>
+                                            <p className="text-gray-600">Find amazing content from our community of writers</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <FaPlus className="text-purple-500 text-2xl" />
+                                            </div>
+                                            <h3 className="text-xl font-semibold mb-2">Share Your Voice</h3>
+                                            <p className="text-gray-600">Create and share your own stories with the world</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <FaFilter className="text-green-500 text-2xl" />
+                                            </div>
+                                            <h3 className="text-xl font-semibold mb-2">Connect</h3>
+                                            <p className="text-gray-600">Engage with other writers and readers</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
-                        <div className='flex flex-wrap'>
-                            {currentPosts.map((post) => (
-                                <div key={post.$id} className='p-2 w-full sm:w-1/2 lg:w-1/3'>
-                                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                                        <PostCard {...post} showTags={false} />
-                                        <div className="p-4 pt-0">
-                                            <Link 
-                                                to={`/post/${post.$id}`}
-                                                className="inline-flex items-center text-blue-500 hover:text-blue-600 font-medium"
+                        {/* Posts Grid for Logged In Users */}
+                        {authStatus && (
+                            <>
+                                <div className="mb-8">
+                                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                                        <div className="relative flex-1">
+                                            <input
+                                                type="text"
+                                                placeholder="Search your posts..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className="w-full px-4 py-2 pl-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                            <FaSearch className="absolute left-3 top-3 text-gray-400" />
+                                        </div>
+
+                                        <div className="flex gap-4">
+                                            <select
+                                                value={selectedCategory}
+                                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                                className="px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             >
-                                                Read More <FaArrowRight className="ml-2" />
+                                                <option value="all">All Categories</option>
+                                                {categories.map((category) => (
+                                                    <option key={category} value={category}>
+                                                        {category}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                            <select
+                                                value={sortBy}
+                                                onChange={(e) => setSortBy(e.target.value)}
+                                                className="px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option value="newest">Newest First</option>
+                                                <option value="oldest">Oldest First</option>
+                                            </select>
+
+                                            <Link to="/add-post" className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition">
+                                                <FaPlus />
+                                                New Post
                                             </Link>
                                         </div>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
 
-                        {totalPages > 1 && (
-                            <div className="flex justify-center mt-8 gap-2">
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className="px-4 py-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-                                >
-                                    Previous
-                                </button>
-                                <span className="px-4 py-2">
-                                    Page {currentPage} of {totalPages}
-                                </span>
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages}
-                                    className="px-4 py-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        )}
-
-                        {filteredPosts.length === 0 && (
-                            <div className="text-center py-12">
-                                <h2 className="text-2xl font-bold mb-4">No posts found</h2>
-                                <p className="text-gray-600 mb-4">
-                                    {searchQuery || selectedCategory
-                                        ? "Try adjusting your search or filter criteria"
-                                        : "You haven't created any posts yet"}
-                                </p>
-                                <Link to="/add-post" className="inline-block bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition">
-                                    Create Your First Post
-                                </Link>
-                            </div>
+                                <div className='flex flex-wrap'>
+                                    {currentPosts.map((post) => (
+                                        <div key={post.$id} className='p-2 w-full sm:w-1/2 lg:w-1/3'>
+                                            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                                                <PostCard {...post} showTags={false} />
+                                                <div className="p-4">
+                                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">{post.title}</h3>
+                                                    <div className="text-gray-500 text-sm mb-3 line-clamp-[2.5] h-[3.75rem]">
+                                                        {post.content.replace(/<[^>]*>/g, '').replace(/&mdash;/g, '—')}
+                                                    </div>
+                                                    <Link 
+                                                        to={`/post/${post.$id}`}
+                                                        className="inline-flex items-center text-blue-500 hover:text-blue-600 font-medium"
+                                                    >
+                                                        Read More <FaArrowRight className="ml-2" />
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
                         )}
                     </>
                 )}

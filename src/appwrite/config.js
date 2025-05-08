@@ -1,5 +1,3 @@
-
-
 import conf from '../conf/conf.js';                                     
 
 import { Client, ID, Databases, Storage, Query } from "appwrite";
@@ -35,9 +33,10 @@ export class Service {
                     featuredImage,
                     status,
                     userId,
+                    likes: 0,
+                    likedBy: "[]"
                 }
             )
-
         } catch (error) {
             console.log("Appwrite service :: createPost :: error", error);
         }
@@ -88,13 +87,10 @@ export class Service {
                 conf.appwriteCollectionId,
                 slug
             )
-
         } catch (error) {
             console.log("Appwrite service :: getPost :: error", error);
-
             return false;
         }
-
     }
 
 
@@ -252,6 +248,90 @@ export class Service {
                 return ""; // or some default image path
             }
         }
+
+    async createComment({ postId, userId, content, userName }) {
+        try {
+            return await this.databases.createDocument(
+                conf.appwriteDatabaseId,
+                conf.appwriteCommentsCollectionId,
+                ID.unique(),
+                {
+                    postId,
+                    userId,
+                    content,
+                    userName,
+                    createdAt: Math.floor(Date.now() / 1000), // Convert to Unix timestamp
+                }
+            );
+        } catch (error) {
+            console.log("Appwrite service :: createComment :: error", error);
+            throw error;
+        }
+    }
+
+    async getComments(postId) {
+        try {
+            return await this.databases.listDocuments(
+                conf.appwriteDatabaseId,
+                conf.appwriteCommentsCollectionId,
+                [Query.equal("postId", postId), Query.orderDesc("$createdAt")]
+            );
+        } catch (error) {
+            console.log("Appwrite service :: getComments :: error", error);
+            return false;
+        }
+    }
+
+    async deleteComment(commentId) {
+        try {
+            await this.databases.deleteDocument(
+                conf.appwriteDatabaseId,
+                conf.appwriteCommentsCollectionId,
+                commentId
+            );
+            return true;
+        } catch (error) {
+            console.log("Appwrite service :: deleteComment :: error", error);
+            return false;
+        }
+    }
+
+    async toggleLike(postId, userId) {
+        try {
+            const post = await this.getPost(postId);
+            if (!post) return false;
+
+            // Parse the likedBy string into an array
+            const likedBy = JSON.parse(post.likedBy || "[]");
+            const hasLiked = likedBy.includes(userId);
+            
+            let updatedLikedBy;
+            let updatedLikes;
+
+            if (hasLiked) {
+                // Unlike
+                updatedLikedBy = JSON.stringify(likedBy.filter(id => id !== userId));
+                updatedLikes = Math.max(0, (post.likes || 0) - 1);
+            } else {
+                // Like
+                updatedLikedBy = JSON.stringify([...likedBy, userId]);
+                updatedLikes = (post.likes || 0) + 1;
+            }
+
+            return await this.databases.updateDocument(
+                conf.appwriteDatabaseId,
+                conf.appwriteCollectionId,
+                postId,
+                {
+                    likes: updatedLikes,
+                    likedBy: updatedLikedBy
+                }
+            );
+        } catch (error) {
+            console.log("Appwrite service :: toggleLike :: error", error);
+            return false;
+        }
+    }
 
 }
 

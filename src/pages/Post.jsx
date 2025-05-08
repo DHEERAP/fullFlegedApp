@@ -2,27 +2,42 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import appwriteService from "../appwrite/config";
 import aiService from "../appwrite/aiService";
-import { Button, Container } from "../components";
+import { Button, Container, Input } from "../components";
 import parse from "html-react-parser";
 import { useSelector } from "react-redux";
-import { FaFacebook, FaTwitter, FaInstagram, FaWhatsapp, FaEdit, FaTrash, FaRobot, FaBrain, FaLightbulb } from 'react-icons/fa';
+import { FaFacebook, FaTwitter, FaInstagram, FaWhatsapp, FaEdit, FaTrash, FaRobot, FaBrain, FaLightbulb, FaComment, FaUser, FaClock, FaHeart, FaRegHeart } from 'react-icons/fa';
 
 export default function Post() {
   const [post, setPost] = useState(null);
   const [aiSummary, setAiSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
   const { slug } = useParams();
   const navigate = useNavigate();
   const userData = useSelector((state) => state.auth.userData);
   const isAuthor = post && userData ? post.userId === userData.$id : false;
+  const hasLiked = post && userData ? post.likedBy?.includes(userData.$id) : false;
 
   useEffect(() => {
     if (slug) {
       appwriteService.getPost(slug).then((post) => {
         if (post) {
           setPost(post);
-        } else navigate("/");
+          // Fetch comments for this post
+          appwriteService.getComments(post.$id).then((response) => {
+            if (response) {
+              setComments(response.documents);
+            }
+          });
+        } else {
+          setError("Failed to fetch post. You may not have permission to view or update this post.");
+          // Optionally, comment out the redirect for debugging:
+          // navigate("/");
+        }
       });
     } else {
       navigate("/");
@@ -71,34 +86,97 @@ export default function Post() {
     appwriteService.downloadFile(fileId, title, content, imageUrl);
   };
 
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim() || !userData) return;
+
+    setCommentLoading(true);
+    setError(null);
+    try {
+      const comment = await appwriteService.createComment({
+        postId: post.$id,
+        userId: userData.$id,
+        content: newComment.trim(),
+        userName: userData.name || "Anonymous"
+      });
+
+      if (comment) {
+        setComments([comment, ...comments]);
+        setNewComment("");
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      if (error.message.includes("Missing required parameter")) {
+        setError("Configuration error: Comments collection not set up. Please contact the administrator.");
+      } else {
+        setError("Failed to add comment. Please try again.");
+      }
+    } finally {
+      setCommentLoading(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const success = await appwriteService.deleteComment(commentId);
+      if (success) {
+        setComments(comments.filter(comment => comment.$id !== commentId));
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      setError("Failed to delete comment. Please try again.");
+    }
+  };
+
+  const handleLike = async () => {
+    if (!userData) {
+      navigate('/login');
+      return;
+    }
+
+    setLikeLoading(true);
+    try {
+      const updatedPost = await appwriteService.toggleLike(post.$id, userData.$id);
+      if (updatedPost) {
+        setPost(updatedPost);
+      } else {
+        setError("Failed to update like. Please check your permissions or try again.");
+        console.error("toggleLike failed or returned null/false");
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      setError("Failed to update like. Please try again.");
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
   return post ? (
     <div className="py-20 bg-gradient-to-b from-gray-50 to-blue-100">
       <Container>
-        {/* Author Actions (Edit and Delete) */}
-        {isAuthor && (
-          <div className="relative">
-            {/* Image Section with Rounded Corners */}
-            <div className="w-full flex justify-center mb-6 relative">
-              <div className="w-full max-w-4xl relative">
+        {/* Featured Image Section - Now visible for all posts */}
+        <div className="relative">
+          <div className="w-full flex justify-center mb-6 relative">
+            <div className="w-full max-w-4xl relative">
+              {post.featuredImage && (
                 <img
                   src={appwriteService.getFilePreview(post.featuredImage)}
                   alt={post.title}
                   className="w-full h-96 object-cover rounded-2xl shadow-xl transform hover:scale-[1.02] transition-all duration-300"
                 />
-
-                {/* Edit and Delete Buttons - Diagonally Opposite */}
-                <div className="absolute top-4 right-4">
+              )}
+              {/* Edit and Delete Buttons (stacked top-right) */}
+              {isAuthor && (
+                <div className="absolute top-4 right-4 z-10 flex flex-col space-y-2">
                   <Link to={`/edit-post/${post.$id}`}>
                     <Button
                       bgColor="bg-green-500"
-                      className="hover:bg-green-600 transition-all duration-300 px-4 py-2 rounded-full text-white text-lg shadow-lg flex items-center mb-2"
+                      className="hover:bg-green-600 transition-all duration-300 px-4 py-2 rounded-full text-white text-lg shadow-lg flex items-center"
                     >
                       <FaEdit className="mr-2" />
                       Edit
                     </Button>
                   </Link>
-                </div>
-                <div className="absolute bottom-4 left-4">
                   <Button
                     bgColor="bg-red-500"
                     onClick={deletePost}
@@ -108,10 +186,26 @@ export default function Post() {
                     Delete
                   </Button>
                 </div>
+              )}
+              {/* Likes Section - below image, not overlapping */}
+              <div className="flex items-center mt-4 ml-1">
+                <button
+                  onClick={handleLike}
+                  aria-label={hasLiked ? "Unlike" : "Like"}
+                  className={`transition-all duration-150 mr-2 text-2xl 
+                    ${hasLiked ? "text-red-500 scale-110" : "text-gray-400 hover:text-red-400 hover:scale-110"}
+                    focus:outline-none`}
+                  disabled={likeLoading}
+                >
+                  {hasLiked ? <FaHeart /> : <FaRegHeart />}
+                </button>
+                <span className="text-gray-700 font-semibold text-lg transition-all duration-150">
+                  {post.likes} {post.likes === 1 ? "Like" : "Likes"}
+                </span>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Enhanced Title Section */}
         <div className="text-center mb-12">
@@ -143,6 +237,121 @@ export default function Post() {
               {parse(post.content)}
             </div>
           </div>
+        </div>
+
+        {/* Comments Section */}
+        <div className="w-full bg-white p-8 rounded-2xl shadow-lg mb-8">
+          <div className="flex items-center space-x-3 mb-6 border-b pb-4">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-full">
+              <FaComment className="text-white text-xl" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800">Comments</h2>
+            <span className="text-gray-500 text-sm ml-2">({comments.length})</span>
+          </div>
+
+          {/* Comments List */}
+          <div className="space-y-4 mb-8 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+            {comments.map((comment) => (
+              <div key={comment.$id} className="flex space-x-3 group">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                    <FaUser className="text-white text-sm" />
+                  </div>
+                </div>
+                <div className="flex-grow">
+                  <div className="relative group-hover:bg-gray-50 transition-all duration-300 rounded-lg">
+                    <div className="flex items-baseline space-x-2">
+                      <span className="font-semibold text-sm text-gray-900">{comment.userName}</span>
+                      <p className="text-gray-700 text-sm leading-relaxed">{comment.content}</p>
+                    </div>
+                    <div className="flex items-center space-x-3 mt-1 ml-0">
+                      <span className="text-gray-500 text-xs">
+                        {new Date(comment.createdAt * 1000).toLocaleDateString()}
+                      </span>
+                      {userData && (userData.$id === comment.userId || isAuthor) && (
+                        <button
+                          onClick={() => handleDeleteComment(comment.$id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors duration-300 opacity-0 group-hover:opacity-100"
+                        >
+                          <FaTrash className="text-xs" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {comments.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <div className="bg-gray-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <FaComment className="text-gray-400 text-2xl" />
+                </div>
+                <p className="text-lg font-medium">No comments yet</p>
+                <p className="text-sm text-gray-400 mt-1">Be the first to share your thoughts!</p>
+              </div>
+            )}
+          </div>
+
+          {/* Add Comment Form */}
+          {userData ? (
+            <form onSubmit={handleAddComment} className="mt-6 border-t pt-6">
+              <div className="flex items-center space-x-3">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                    <FaUser className="text-white text-sm" />
+                  </div>
+                </div>
+                <div className="flex-grow">
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      placeholder="Add a comment..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      className="w-full p-3 pr-20 border border-gray-200 rounded-full focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 text-sm"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={commentLoading || !newComment.trim()}
+                      className={`absolute right-1 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-full text-white text-sm font-medium transition-all duration-300 ${
+                        commentLoading || !newComment.trim()
+                          ? 'bg-gray-300 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
+                      }`}
+                    >
+                      {commentLoading ? (
+                        <div className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-1 h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Posting
+                        </div>
+                      ) : (
+                        'Post'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          ) : (
+            <div className="mt-6 border-t pt-6 text-center">
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-gray-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                  <FaUser className="text-gray-400 text-xl" />
+                </div>
+                <p className="text-gray-600 mb-2">Want to join the conversation?</p>
+                <Link 
+                  to="/login" 
+                  className="inline-block bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 rounded-full font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
+                >
+                  Login to Comment
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Enhanced AI Summary Section */}
@@ -302,6 +511,23 @@ export default function Post() {
           </div>
         </div>
       </Container>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #555;
+        }
+      `}</style>
     </div>
   ) : null;
 }

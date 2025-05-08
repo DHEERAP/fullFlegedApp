@@ -127,7 +127,7 @@ export default function AllPosts() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none transition-all duration-300"
               >
-                <option value="newest">Newest First</option>
+                <option on value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
                 <option value="title">Title A-Z</option>
               </select>
@@ -140,7 +140,9 @@ export default function AllPosts() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {currentPosts.map((post) => (
               <div key={post.$id} className="transform hover:scale-[1.02] transition-all duration-300">
-                <PostCard {...post} currentUserId={currentUserId} />
+                <Link to={`/post/${post.$id}`}>
+                  <PostCard {...post} currentUserId={currentUserId} />
+                </Link>
               </div>
             ))}
           </div>

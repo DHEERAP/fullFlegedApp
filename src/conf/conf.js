@@ -5,6 +5,7 @@ const conf = {
     appwriteDatabaseId: String(import.meta.env.VITE_APPWRITE_DATABASE_ID), // Corrected
     appwriteCollectionId: String(import.meta.env.VITE_APPWRITE_COLLECTION_ID), // Corrected
     appwriteBucketId: String(import.meta.env.VITE_APPWRITE_BUCKET_ID), // Corrected
+    appwriteCommentsCollectionId: String(import.meta.env.VITE_APPWRITE_COMMENTS_COLLECTION_ID),
     
 
 }
