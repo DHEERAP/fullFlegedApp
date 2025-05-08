@@ -163,7 +163,7 @@ function Home() {
 
     return (
         <div className="py-20 bg-gradient-to-b from-gray-50 to-blue-100">
-            <div className="max-w-6xl mx-auto px-4">
+            <div className="max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-6xl mx-auto px-2 sm:px-4 md:px-8">
                 {/* Add New Post Section for users with no posts */}
                 {userData && userPosts.length === 0 ? (
                     <div className="w-full flex flex-col items-center justify-center mb-12">
@@ -190,108 +190,110 @@ function Home() {
                     <>
                         {/* Hero Section for Non-Logged In Users */}
                         {!authStatus && (
-                            <div className="relative overflow-hidden">
-                                {/* Hero Background */}
-                                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10"></div>
-                                
-                                {/* Hero Content */}
-                                <div className="relative text-center mb-16 py-16">
-                                    <h1 className="text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-                                        Welcome to BlogApp
-                                    </h1>
-                                    <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                                        Discover amazing stories, share your thoughts, and connect with a community of passionate writers.
-                                    </p>
-                                    <div className="flex justify-center gap-6">
-                                        <Link to="/login" className="bg-blue-500 text-white px-8 py-3 rounded-full hover:bg-blue-600 transition transform hover:scale-105 shadow-lg">
-                                            Get Started
-                                        </Link>
-                                        <Link to="/signup" className="bg-white text-blue-500 px-8 py-3 rounded-full hover:bg-gray-100 transition transform hover:scale-105 shadow-lg">
-                                            Join Our Community
-                                        </Link>
-                                    </div>
-                                </div>
-
-                                {/* Auto-scrolling Posts Section with Fake Stories */}
-                                <div className="mb-16">
-                                    <h2 className="text-3xl font-bold text-center mb-8">Trending Stories</h2>
-                                    <div 
-                                        ref={scrollContainerRef}
-                                        className="flex overflow-x-hidden gap-4 py-4"
-                                        style={{ scrollBehavior: 'smooth' }}
-                                    >
-                                        {fakeStories.map((story) => (
-                                            <div 
-                                                key={story.id}
-                                                className="flex-shrink-0 w-80 bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition duration-300"
-                                            >
-                                                <img 
-                                                    src={story.image} 
-                                                    alt={story.title}
-                                                    className="w-full h-48 object-cover"
-                                                />
-                                                <div className="p-4">
-                                                    <h3 className="text-xl font-semibold mb-2 line-clamp-2">{story.title}</h3>
-                                                    <p className="text-gray-600 text-sm line-clamp-3 mb-4">{story.content}</p>
-                                                    <Link 
-                                                        to="/login"
-                                                        className="text-blue-500 hover:text-blue-600 font-medium inline-flex items-center"
-                                                    >
-                                                        Read More <FaArrowRight className="ml-2" />
-                                                    </Link>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {/* Duplicate stories for seamless scrolling */}
-                                        {fakeStories.map((story) => (
-                                            <div 
-                                                key={`duplicate-${story.id}`}
-                                                className="flex-shrink-0 w-80 bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition duration-300"
-                                            >
-                                                <img 
-                                                    src={story.image} 
-                                                    alt={story.title}
-                                                    className="w-full h-48 object-cover"
-                                                />
-                                                <div className="p-4">
-                                                    <h3 className="text-xl font-semibold mb-2 line-clamp-2">{story.title}</h3>
-                                                    <p className="text-gray-600 text-sm line-clamp-3 mb-4">{story.content}</p>
-                                                    <Link 
-                                                        to="/login"
-                                                        className="text-blue-500 hover:text-blue-600 font-medium inline-flex items-center"
-                                                    >
-                                                        Read More <FaArrowRight className="ml-2" />
-                                                    </Link>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Why Join Section */}
-                                <div className="bg-white rounded-2xl shadow-xl p-8 mb-16">
-                                    <h2 className="text-3xl font-bold text-center mb-8">Why Join BlogApp?</h2>
-                                    <div className="grid md:grid-cols-3 gap-8">
-                                        <div className="text-center">
-                                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                <FaSearch className="text-blue-500 text-2xl" />
-                                            </div>
-                                            <h3 className="text-xl font-semibold mb-2">Discover Stories</h3>
-                                            <p className="text-gray-600">Find amazing content from our community of writers</p>
+                            <div className="w-full">
+                                <div className="relative overflow-hidden w-full">
+                                    {/* Hero Background */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-10"></div>
+                                    
+                                    {/* Hero Content */}
+                                    <div className="relative text-center mb-16 py-16">
+                                        <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 text-center px-2">
+                                            Welcome to BlogApp
+                                        </h1>
+                                        <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 sm:mb-8 max-w-full sm:max-w-2xl mx-auto text-center px-2">
+                                            Discover amazing stories, share your thoughts, and connect with a community of passionate writers.
+                                        </p>
+                                        <div className="flex justify-center gap-6">
+                                            <Link to="/login" className="bg-blue-500 text-white px-8 py-3 rounded-full hover:bg-blue-600 transition transform hover:scale-105 shadow-lg">
+                                                Get Started
+                                            </Link>
+                                            <Link to="/signup" className="bg-white text-blue-500 px-8 py-3 rounded-full hover:bg-gray-100 transition transform hover:scale-105 shadow-lg">
+                                                Join Our Community
+                                            </Link>
                                         </div>
-                                        <div className="text-center">
-                                            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                <FaPlus className="text-purple-500 text-2xl" />
-                                            </div>
-                                            <h3 className="text-xl font-semibold mb-2">Share Your Voice</h3>
-                                            <p className="text-gray-600">Create and share your own stories with the world</p>
+                                    </div>
+
+                                    {/* Auto-scrolling Posts Section with Fake Stories */}
+                                    <div className="mb-4 sm:mb-6 md:mb-16 w-full">
+                                        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-4 sm:mb-6 md:mb-8">Trending Stories</h2>
+                                        <div 
+                                            ref={scrollContainerRef}
+                                            className="flex overflow-x-auto gap-2 sm:gap-4 md:gap-6 py-2 sm:py-4 w-full snap-x snap-mandatory"
+                                            style={{ scrollBehavior: 'smooth' }}
+                                        >
+                                            {fakeStories.map((story) => (
+                                                <div 
+                                                    key={story.id}
+                                                    className="flex-shrink-0 w-56 sm:w-64 md:w-80 bg-white rounded-lg sm:rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition duration-300 snap-center"
+                                                >
+                                                    <img 
+                                                        src={story.image} 
+                                                        alt={story.title}
+                                                        className="w-full h-24 sm:h-32 md:h-40 lg:h-48 object-cover"
+                                                    />
+                                                    <div className="p-2 sm:p-4">
+                                                        <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-1 sm:mb-2 line-clamp-2">{story.title}</h3>
+                                                        <p className="text-gray-600 text-xs sm:text-sm line-clamp-3 mb-2 sm:mb-4">{story.content}</p>
+                                                        <Link 
+                                                            to="/login"
+                                                            className="text-blue-500 hover:text-blue-600 font-medium inline-flex items-center"
+                                                        >
+                                                            Read More <FaArrowRight className="ml-2" />
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {/* Duplicate stories for seamless scrolling */}
+                                            {fakeStories.map((story) => (
+                                                <div 
+                                                    key={`duplicate-${story.id}`}
+                                                    className="flex-shrink-0 w-56 sm:w-64 md:w-80 bg-white rounded-lg sm:rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition duration-300 snap-center"
+                                                >
+                                                    <img 
+                                                        src={story.image} 
+                                                        alt={story.title}
+                                                        className="w-full h-24 sm:h-32 md:h-40 lg:h-48 object-cover"
+                                                    />
+                                                    <div className="p-2 sm:p-4">
+                                                        <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-1 sm:mb-2 line-clamp-2">{story.title}</h3>
+                                                        <p className="text-gray-600 text-xs sm:text-sm line-clamp-3 mb-2 sm:mb-4">{story.content}</p>
+                                                        <Link 
+                                                            to="/login"
+                                                            className="text-blue-500 hover:text-blue-600 font-medium inline-flex items-center"
+                                                        >
+                                                            Read More <FaArrowRight className="ml-2" />
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div className="text-center">
-                                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                <FaFilter className="text-green-500 text-2xl" />
+                                    </div>
+
+                                    {/* Why Join Section */}
+                                    <div className="bg-white rounded-lg sm:rounded-2xl shadow-xl p-2 sm:p-4 md:p-8 mb-4 sm:mb-6 md:mb-16 w-full">
+                                        <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center mb-4 sm:mb-6 md:mb-8">Why Join BlogApp?</h2>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 md:gap-8">
+                                            <div className="text-center">
+                                                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                    <FaSearch className="text-blue-500 text-2xl" />
+                                                </div>
+                                                <h3 className="text-xl font-semibold mb-2">Discover Stories</h3>
+                                                <p className="text-gray-600">Find amazing content from our community of writers</p>
                                             </div>
-                                            <h3 className="text-xl font-semibold mb-2">Connect</h3>
-                                            <p className="text-gray-600">Engage with other writers and readers</p>
+                                            <div className="text-center">
+                                                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                    <FaPlus className="text-purple-500 text-2xl" />
+                                                </div>
+                                                <h3 className="text-xl font-semibold mb-2">Share Your Voice</h3>
+                                                <p className="text-gray-600">Create and share your own stories with the world</p>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                    <FaFilter className="text-green-500 text-2xl" />
+                                                </div>
+                                                <h3 className="text-xl font-semibold mb-2">Connect</h3>
+                                                <p className="text-gray-600">Engage with other writers and readers</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
